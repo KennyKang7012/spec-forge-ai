@@ -60,16 +60,11 @@ spec-forge-ai/
 
 ### 後端啟動
 
+請確認您的終端機位於**專案根目錄** (`spec-forge-ai/`)：
+
 ```bash
-cd backend
-
-# 使用 uv 建立虛擬環境並安裝依賴
-uv venv
-source .venv/bin/activate    # Mac/Linux
-uv pip install -r requirements.txt
-
-# 啟動後端
-uvicorn main:app --reload --port 8000
+# 使用 uv run 直接啟動 FastAPI 伺服器 (不需手動 activate 虛擬環境)
+PYTHONPATH=. uv run uvicorn backend.main:app --reload --port 8000
 ```
 
 ### 前端啟動
