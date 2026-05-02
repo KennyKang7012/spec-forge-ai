@@ -1,0 +1,50 @@
+{
+  "skills": {
+    "SKILL-01_intent_discovery": {
+      "name": "意圖挖掘 (Intent Discovery)",
+      "agent": "BA",
+      "max_rounds": 7,
+      "initial_questions": [
+        "您希望 BA 以什麼語言與您互動？（繁體中文 / English）",
+        "您的需求屬於哪個領域？（Web App / Mobile / API / 資料分析 / 其他）",
+        "是否有已存在的系統需要整合？"
+      ],
+      "five_whys_prompts": [
+        "你希望解決什麼問題？",
+        "為什麼這個問題重要？",
+        "目前如何處理這個問題？",
+        "理想情況是什麼樣的？",
+        "有哪些限制條件？"
+      ],
+      "output_file": "intent_report.md"
+    },
+    "SKILL-02_requirement_proposal": {
+      "name": "需求提案 (Requirement Proposal)",
+      "agent": "PM",
+      "confirmation_questions": [
+        "以下功能列表是否有遺漏或需調整？",
+        "您偏好的技術棧？（React/Vue/純 HTML、Node.js/Python/Go）",
+        "第一階段 MVP 包含哪些核心功能？",
+        "部署環境偏好？（雲端 / 本地 / 混合）"
+      ],
+      "output_file": "proposal.md"
+    },
+    "SKILL-03_technical_design": {
+      "name": "技術架構設計 (Technical Design)",
+      "agent": "Architect",
+      "confirmation_questions": [
+        "預期的用戶量級？（10人 / 100人 / 1000+）",
+        "是否需要即時通訊或推播功能？",
+        "資料儲存有無特殊要求？（GDPR、資料落地等）",
+        "是否有現有的 CI/CD 流程需要整合？"
+      ],
+      "output_files": ["design.md", "tasks.md"]
+    },
+    "SKILL-04_spec_validation": {
+      "name": "規格撰寫與驗證 (Spec Writing & Validation)",
+      "agent": "Writer",
+      "max_retries": 3,
+      "output_directory": "specs/"
+    }
+  }
+}
