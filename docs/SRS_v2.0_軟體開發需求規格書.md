@@ -400,6 +400,9 @@ erDiagram
 | Google Gemini | `gemini-pro` | Google AI API | ❌ 否 |
 | OpenRouter | 依用戶選擇 | OpenAI 兼容 API | ❌ 否 |
 | Nvidia | 依用戶選擇 | OpenAI 兼容 API | ❌ 否 |
+| **Custom（自訂）** | 依用戶設定 | OpenAI 兼容 API | 視部署環境 |
+
+> **公司內部 LLM Server：** 只要內部服務提供 OpenAI 兼容 API（如 vLLM、LocalAI、LiteLLM、FastChat 等），即可透過設定 `CUSTOM_LLM_BASE_URL` 直接串接，無需修改程式碼。
 
 切換方式：透過 `.env` 設定檔或前端設定頁面動態切換。
 
