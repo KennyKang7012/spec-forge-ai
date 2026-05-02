@@ -180,25 +180,6 @@ async def project_stream(
     # 確認專案屬於當前用戶
     await _get_user_project(project_id, user_id, db)
 
-    Phase 1 骨架：目前回傳模擬的連線確認事件。
-    Phase 2+ 將整合真正的 Agent Pipeline 事件。
-
-    事件格式：
-    ```json
-    {
-        "event": "agent_message | agent_question | doc_stream | phase_complete | error",
-        "data": {
-            "agent": "BA | PM | Architect | Writer",
-            "phase": "1-5",
-            "content": "...",
-            "metadata": {}
-        }
-    }
-    ```
-    """
-    # 確認專案屬於當前用戶
-    await _get_user_project(project_id, current_user.id, db)
-
     async def event_generator():
         """SSE 事件產生器（Phase 1 骨架）"""
         # 連線確認事件
