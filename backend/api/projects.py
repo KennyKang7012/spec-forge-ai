@@ -158,11 +158,27 @@ async def list_versions(
 )
 async def project_stream(
     project_id: int,
-    current_user: User = Depends(get_current_user),
+    token: str | None = None, # SSE 從 query string 拿 token
     db: AsyncSession = Depends(get_db),
 ):
     """
     SSE 串流端點 — 用於即時推播 Agent 訊息
+    """
+    # 簡易解析 Token 取得用戶 (因為 EventSource 無法傳送 Header)
+    from backend.core.security import decode_access_token
+    from fastapi import HTTPException
+    
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing token")
+        
+    payload = decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+        
+    user_id = int(payload.get("sub"))
+
+    # 確認專案屬於當前用戶
+    await _get_user_project(project_id, user_id, db)
 
     Phase 1 骨架：目前回傳模擬的連線確認事件。
     Phase 2+ 將整合真正的 Agent Pipeline 事件。
