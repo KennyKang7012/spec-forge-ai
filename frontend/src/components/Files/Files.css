@@ -1,0 +1,232 @@
+/* ═══════════════════════════════════════════════════════════════════
+   SpecForge AI — File Panel & Preview Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── File Panel (Side Drawer) ───────────────────────────────────── */
+.file-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: var(--z-modal-backdrop);
+  animation: fadeIn 200ms ease;
+}
+
+.file-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 380px;
+  max-width: 90vw;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-color);
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 300ms ease;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
+}
+
+.file-panel-header {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.file-panel-header h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.file-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+.file-panel-footer {
+  padding: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.file-panel-footer button {
+  width: 100%;
+}
+
+/* ── File Item ──────────────────────────────────────────────────── */
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.file-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.file-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--info-bg);
+  color: var(--info);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.file-item-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-item-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.file-item-action {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.file-item:hover .file-item-action {
+  opacity: 1;
+}
+
+.file-empty {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ── File Preview Modal ─────────────────────────────────────────── */
+.file-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 200ms ease;
+}
+
+.file-preview-panel {
+  width: 90vw;
+  max-width: 900px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 300ms ease;
+}
+
+.file-preview-header {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.file-preview-header h3 {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.file-preview-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.file-preview-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xl);
+}
+
+.file-preview-content {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.file-preview-content h1 { font-size: 1.5rem; margin: 1.2em 0 0.5em; }
+.file-preview-content h2 { font-size: 1.3rem; margin: 1em 0 0.4em; }
+.file-preview-content h3 { font-size: 1.1rem; margin: 0.8em 0 0.3em; }
+
+.file-preview-content p {
+  margin-bottom: 0.8em;
+  color: var(--text-primary);
+}
+
+.file-preview-content ul,
+.file-preview-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+.file-preview-content code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.file-preview-content pre {
+  margin: 1em 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.file-preview-content blockquote {
+  border-left: 3px solid var(--primary-color);
+  padding-left: var(--space-md);
+  margin: 1em 0;
+  color: var(--text-secondary);
+}
+
+.file-preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.file-preview-content th,
+.file-preview-content td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.file-preview-content th {
+  background: rgba(255, 255, 255, 0.04);
+}

@@ -29,10 +29,23 @@ export const useApi = () => {
         throw new Error('Session expired or unauthorized. Please log in again.');
       }
 
-      const data = await response.json();
+      // Check if response has content before parsing JSON
+      const text = await response.text();
+      let data = {};
+      try {
+        if (text) {
+          data = JSON.parse(text);
+        }
+      } catch (e) {
+        // Not a JSON response (e.g. backend down, Vite proxy error HTML)
+        console.warn('Response is not valid JSON:', text.substring(0, 100));
+        if (!response.ok) {
+           throw new Error(`API request failed with status ${response.status}`);
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.detail || data.message || 'API request failed');
+        throw new Error(data.detail || data.message || `API request failed: ${response.status}`);
       }
 
       return data;

@@ -22,13 +22,43 @@ class ProjectSession:
         # 背景任務
         self.task: Optional[asyncio.Task] = None
 
+    async def _save_to_db(self, role: str, content: str, agent_type: Optional[str] = None, msg_type: str = "message"):
+        """內部方法：將訊息異步存入資料庫"""
+        from backend.core.database import ChatMessage, _get_session_factory
+        session_factory = _get_session_factory()
+        async with session_factory() as db:
+            msg = ChatMessage(
+                project_id=self.project_id,
+                role=role,
+                agent_type=agent_type,
+                content=content,
+                msg_type=msg_type
+            )
+            db.add(msg)
+            await db.commit()
+
     async def enqueue_sse_event(self, event_type: str, data: dict):
-        """推送 SSE 事件到前端"""
+        """推送 SSE 事件到前端，並視情況存入資料庫"""
         payload = {
             "event": event_type,
             "data": json.dumps(data)
         }
         await self.sse_queue.put(payload)
+
+        # 自動存檔邏輯
+        if event_type in ["agent_message", "agent_question"]:
+            await self._save_to_db(
+                role="agent",
+                content=data.get("content", ""),
+                agent_type=data.get("agent"),
+                msg_type="question" if event_type == "agent_question" else "message"
+            )
+        elif event_type == "phase_complete":
+             await self._save_to_db(
+                role="system",
+                content=data.get("message", ""),
+                msg_type="success"
+            )
 
     def enqueue_sse_event_sync(self, event_type: str, data: dict):
         """同步方法：從其他執行緒安全地推送 SSE 事件"""
@@ -39,7 +69,8 @@ class ProjectSession:
         return await self.sse_queue.get()
 
     async def put_reply(self, reply_text: str):
-        """將前端的使用者回覆放入隊列"""
+        """將前端的使用者回覆放入隊列，並存入資料庫"""
+        await self._save_to_db(role="user", content=reply_text, msg_type="reply")
         await self.reply_queue.put(reply_text)
 
     async def wait_for_reply(self) -> str:

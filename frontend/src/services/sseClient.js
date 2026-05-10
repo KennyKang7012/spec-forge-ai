@@ -1,3 +1,7 @@
+/**
+ * SpecForge AI — SSE Client Service
+ * 管理 EventSource 連線，支援所有自訂事件類型與指數退避重連
+ */
 class SSEClient {
   constructor(endpoint, onMessage, onError) {
     this.endpoint = endpoint;
@@ -5,7 +9,8 @@ class SSEClient {
     this.onError = onError;
     this.eventSource = null;
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
+    this.maxReconnectAttempts = 8;
+    this._token = null;
   }
 
   connect(token) {
@@ -13,58 +18,78 @@ class SSEClient {
       this.disconnect();
     }
 
-    // EventSource 本身不支援自訂 headers (如 Authorization Bearer)
-    // 實務上通常把 token 放在 URL query 中，或者透過 cookie 傳遞。
-    // 在這裡我們先用 URL query 參數傳遞 token，請確認後端是否支援。
-    // 如果後端尚未支援 query token，我們目前只先做基本的 EventSource 骨架。
-    
-    // 注意：因為我們有加 Vite proxy，路徑直接用相對路徑即可
+    this._token = token;
+
+    // EventSource 不支援自訂 headers，透過 query string 傳遞 token
     const url = `${this.endpoint}?token=${token}`;
-    
     this.eventSource = new EventSource(url);
 
     this.eventSource.onopen = () => {
-      console.log('SSE Connection Opened:', this.endpoint);
+      console.log('[SSE] Connection opened:', this.endpoint);
       this.reconnectAttempts = 0;
     };
 
+    // 通用 message 處理（fallback）
     this.eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (this.onMessage) {
-          this.onMessage({ type: event.type || 'message', data });
-        }
-      } catch (err) {
-        console.error('Failed to parse SSE message:', err);
-      }
+      this._dispatch(event.type || 'message', event.data);
     };
 
-    // 監聽後端自訂的事件 (例如 connected, heartbeat)
-    this.eventSource.addEventListener('connected', (event) => {
-      const data = JSON.parse(event.data);
-      if (this.onMessage) this.onMessage({ type: 'connected', data });
-    });
+    // 監聽所有後端自訂事件
+    const eventTypes = [
+      'connected',
+      'heartbeat',
+      'agent_question',
+      'agent_message',
+      'doc_stream',
+      'phase_complete',
+      'error',
+    ];
 
-    this.eventSource.addEventListener('heartbeat', (event) => {
-      const data = JSON.parse(event.data);
-      if (this.onMessage) this.onMessage({ type: 'heartbeat', data });
+    eventTypes.forEach((eventType) => {
+      this.eventSource.addEventListener(eventType, (event) => {
+        this._dispatch(eventType, event.data);
+      });
     });
 
     this.eventSource.onerror = (error) => {
-      console.error('SSE Connection Error:', error);
+      console.error('[SSE] Connection error:', error);
       if (this.onError) this.onError(error);
-      
+
       this.eventSource.close();
-      
-      // 簡單的斷線重連機制
+
+      // 指數退避重連（含 jitter）
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
+        const baseDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+        const jitter = Math.random() * 1000;
+        const delay = baseDelay + jitter;
+
+        console.log(
+          `[SSE] Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+        );
+
         setTimeout(() => {
-          console.log(`Attempting to reconnect... (${this.reconnectAttempts})`);
-          this.connect(token);
-        }, 3000 * this.reconnectAttempts);
+          this.connect(this._token);
+        }, delay);
+      } else {
+        console.error('[SSE] Max reconnect attempts reached.');
       }
     };
+  }
+
+  /** 解析並分派事件 */
+  _dispatch(type, rawData) {
+    try {
+      const data = JSON.parse(rawData);
+      if (this.onMessage) {
+        this.onMessage({ type, data });
+      }
+    } catch (err) {
+      // 非 JSON 資料（如純文字心跳）
+      if (this.onMessage) {
+        this.onMessage({ type, data: { content: rawData } });
+      }
+    }
   }
 
   disconnect() {

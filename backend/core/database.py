@@ -63,6 +63,23 @@ class Project(Base):
     # Relationships
     owner = relationship("User", back_populates="projects")
     versions = relationship("ProjectVersion", back_populates="project", cascade="all, delete-orphan")
+    messages = relationship("ChatMessage", back_populates="project", cascade="all, delete-orphan")
+
+
+class ChatMessage(Base):
+    """對話訊息紀錄表"""
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, index=True)
+    role = Column(String(20), nullable=False)  # user, agent, system
+    agent_type = Column(String(20), nullable=True)  # BA, PM, Architect, Writer
+    content = Column(Text, nullable=False)
+    msg_type = Column(String(20), default="message")  # message, question, reply, success, error
+    timestamp = Column(DateTime, default=func.now())
+
+    # Relationships
+    project = relationship("Project", back_populates="messages")
 
 
 class ProjectVersion(Base):

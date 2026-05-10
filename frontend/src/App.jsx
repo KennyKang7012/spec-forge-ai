@@ -4,6 +4,7 @@ import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import MainLayout from './components/Layout/MainLayout';
 import Dashboard from './pages/Dashboard';
+import SettingsPage from './pages/SettingsPage';
 import useAuthStore from './stores/authStore';
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            {/* 未來會有更多 Protected Routes，例如 /projects/:id 等 */}
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
 

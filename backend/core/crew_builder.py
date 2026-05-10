@@ -80,36 +80,56 @@ async def run_crew_workflow(project_id: int):
         architect_agent = create_architect_agent(llm, project_id)
         writer_agent = create_writer_agent(llm, project_id)
         
-        # 定義 Tasks 並設定產出檔案路徑 (依用戶要求存放在 docs 資料夾下)
-        docs_dir = os.path.join(os.getcwd(), "docs")
+        # 建立 docs 資料夾 (相對於後端執行目錄)
+        docs_dir = "docs"
         os.makedirs(docs_dir, exist_ok=True)
         
+        # 定義回調函式，用於通知階段完成
+        def on_task_completed(task_output):
+            # 取得當前階段名稱，改用更精確的判定
+            task_desc = task_output.description
+            phase_msg = "階段任務已完成"
+            if "5 Whys" in task_desc: phase_msg = "第 1 階段：意圖挖掘已完成"
+            elif "需求提案" in task_desc: phase_msg = "第 2 階段：需求提案已完成"
+            elif "技術架構" in task_desc: phase_msg = "第 3 階段：技術架構設計已完成"
+            elif "規格文件" in task_desc: phase_msg = "第 4 階段：規格文件撰寫已完成"
+
+            # 透過 threadsafe 方式發送 SSE 事件
+            session.enqueue_sse_event_sync(
+                event_type="phase_complete",
+                data={"message": phase_msg}
+            )
+
         intent_analysis_task = Task(
             description="透過 5 Whys 框架與使用者對話，發掘其真實的系統開發需求與商業意圖。最後產出結構化的意圖報告。",
             expected_output="一份完整的 intent_report.md 報告",
             agent=ba_agent,
-            output_file=os.path.join(docs_dir, f"intent_report_{project_id}.md")
+            output_file=os.path.join(docs_dir, f"intent_report_{project_id}.md"),
+            callback=on_task_completed
         )
         
         proposal_task = Task(
             description="根據意圖報告，盤點所需功能，並與使用者確認 MVP 範圍與技術選型，最後提出需求提案。",
             expected_output="一份完整的 proposal.md 提案",
             agent=pm_agent,
-            output_file=os.path.join(docs_dir, f"proposal_{project_id}.md")
+            output_file=os.path.join(docs_dir, f"proposal_{project_id}.md"),
+            callback=on_task_completed
         )
         
         architecture_task = Task(
             description="分析需求提案，設計系統技術架構，包含 Mermaid 圖表，並拆解出具體的開發任務清單。",
             expected_output="系統架構設計與開發任務清單",
             agent=architect_agent,
-            output_file=os.path.join(docs_dir, f"design_and_tasks_{project_id}.md")
+            output_file=os.path.join(docs_dir, f"design_and_tasks_{project_id}.md"),
+            callback=on_task_completed
         )
         
         writing_task = Task(
             description="彙整前面所有階段的產出，撰寫並驗證符合 OpenSpec 標準的規格文件。",
             expected_output="最終的 OpenSpec 規格文件",
             agent=writer_agent,
-            output_file=os.path.join(docs_dir, f"final_specs_{project_id}.md")
+            output_file=os.path.join(docs_dir, f"final_specs_{project_id}.md"),
+            callback=on_task_completed
         )
         
         # 建立 Crew
@@ -122,14 +142,14 @@ async def run_crew_workflow(project_id: int):
         
         import asyncio
         print(f"[{project_id}] 準備啟動 CrewAI...")
-        # 開始執行 (CrewAI kickoff 是同步阻塞函式，必須在獨立 thread 中執行)
+        # 開始執行
         result = await asyncio.to_thread(crew.kickoff)
         print(f"[{project_id}] CrewAI 執行完畢！")
         
-        # 執行完成後，通知前端
+        # 執行完成後，通知前端（最終完成）
         await session.enqueue_sse_event(
             event_type="phase_complete",
-            data={"message": "所有規格流程已完成", "result": str(result)}
+            data={"message": "🎉 恭喜！全案工業級規格書已建置完畢", "result": str(result)}
         )
     except Exception as e:
         print(f"[{project_id}] 執行錯誤: {e}")

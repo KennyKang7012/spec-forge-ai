@@ -32,6 +32,8 @@ const LoginForm = () => {
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || '登入失敗，請檢查帳號密碼。');
+      setUsername(''); // 登入失敗時清空帳號欄位
+      setPassword(''); // 登入失敗時清空密碼欄位
     } finally {
       setIsLoading(false);
     }

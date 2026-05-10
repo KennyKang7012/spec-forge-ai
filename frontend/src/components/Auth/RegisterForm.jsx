@@ -27,6 +27,7 @@ const RegisterForm = () => {
 
     if (formData.password !== formData.confirmPassword) {
       setError('兩次輸入的密碼不一致！');
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
       return;
     }
 
@@ -44,6 +45,7 @@ const RegisterForm = () => {
       navigate('/login');
     } catch (err) {
       setError(err.message || '註冊失敗，請稍後再試。');
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
     } finally {
       setIsLoading(false);
     }
