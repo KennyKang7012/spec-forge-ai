@@ -408,7 +408,7 @@ async def get_project_file(
     with open(file_path, "rb") as f:
         content = f.read()
 
-    # 使用 FastAPI 最標準的 FileResponse，讓框架處理所有標頭
+    # 使用 FastAPI 最標準的 FileResponse，並確保檔名參數正確
     return FileResponse(
         file_path,
         filename=filename,

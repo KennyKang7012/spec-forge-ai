@@ -6,24 +6,24 @@
 
 ```mermaid
 graph LR
-    subgraph Client[客戶端 (iOS / Android / Web)]
-        A1[React Native App] 
-        A2[React SPA (Web)]
-        A1 -->|HTTP/HTTPS| B1[API Gateway]
+    subgraph Client["客戶端 (iOS / Android / Web)"]
+        A1["React Native App"] 
+        A2["React SPA (Web)"]
+        A1 -->|HTTP/HTTPS| B1
         A2 -->|HTTP/HTTPS| B1
     end
 
-    subgraph Edge[邊緣服務 (本地伺服器)]
-        B1[API Gateway (NGINX + SSL)]
-        B2[Auth Service (Keycloak)]
-        B3[Sync Service (Supabase‑Like Realtime)]
-        B4[Notification Service (FCM + SMTP)]
-        B5[Task/Job Scheduler (Celery + Redis)]
-        B6[File Storage (MinIO)]    
-        B7[Database (PostgreSQL)]
-        B8[Search Engine (ElasticSearch)]
-        B9[Offline Cache (SQLite – 客戶端) ]
-        B10[Backup Service (pgBackRest)]
+    subgraph Edge["邊緣服務 (本地伺服器)"]
+        B1["API Gateway (NGINX + SSL)"]
+        B2["Auth Service (Keycloak)"]
+        B3["Sync Service (Supabase‑Like Realtime)"]
+        B4["Notification Service (FCM + SMTP)"]
+        B5["Task/Job Scheduler (Celery + Redis)"]
+        B6["File Storage (MinIO)"]    
+        B7["Database (PostgreSQL)"]
+        B8["Search Engine (ElasticSearch)"]
+        B9["Offline Cache (SQLite – 客戶端)"]
+        B10["Backup Service (pgBackRest)"]
 
         B1 --> B2
         B1 --> B3
@@ -41,12 +41,12 @@ graph LR
         B8 --> B7
     end
 
-    subgraph Infra[基礎設施]
-        C1[Docker Compose / K8s (MiniKube) ]
-        C2[負載平衡器 (HAProxy) ]
-        C3[監控平台 (Prometheus + Grafana) ]
-        C4[日誌平台 (EFK) ]
-        C5[備援 (RAID 1) + 定時快照]
+    subgraph Infra["基礎設施"]
+        C1["Docker Compose / K8s (MiniKube)"]
+        C2["負載平衡器 (HAProxy)"]
+        C3["監控平台 (Prometheus + Grafana)"]
+        C4["日誌平台 (EFK)"]
+        C5["備援 (RAID 1) + 定時快照"]
     end
 
     B1 --> C1

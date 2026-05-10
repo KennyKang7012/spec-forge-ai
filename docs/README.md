@@ -12,6 +12,9 @@
 *   **[下載系統優化實錄](./archive/Phase_4_DownloadSystem/optimization_summary.md)**：記錄了解決 Chrome UUID 檔名問題、Token 驗證方案與最終架構決策。
 *   **[開發需求存檔](./archive/Phase_4_DownloadSystem/development_spec.md)**：Phase 4 實作時的技術規範備份。
 
+### Phase 4：Mermaid 語法優化與 Agent 源頭修正
+*   **[Mermaid 語法優化實錄](./archive/Phase_4_MermaidOptimization/mermaid_syntax_optimization.md)**：記錄了解決 Mermaid 圖表渲染報錯、全量引號強化以及 Agent (Architect/Writer) 指示修正的歷程。
+
 ---
-**最後更新**：2026-05-10
-**狀態**：Phase 4 已完成，Phase 5 準備中
+**最後更新**：2026-05-11
+**狀態**：Phase 4 已完成並通過語法優化驗收，Phase 5 準備中

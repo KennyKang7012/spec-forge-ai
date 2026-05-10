@@ -109,8 +109,8 @@
   margin-top: 2px;
 }
 
-/* 讓 a 標籤看起來像按鈕 */
-.file-btn-link, .download-all-btn-link {
+/* 讓 a 與 button 標籤看起來像按鈕 */
+.file-btn, .file-btn-link, .download-all-btn, .download-all-btn-link {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -122,12 +122,14 @@
   transition: all 0.2s;
 }
 
-.file-btn-link {
+.file-btn, .file-btn-link {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  border: none;
+  cursor: pointer;
 }
 
-.file-btn-link:hover {
+.file-btn:hover, .file-btn-link:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -136,16 +138,18 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.download-all-btn-link {
+.download-all-btn, .download-all-btn-link {
   width: 100%;
   justify-content: center;
   background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
   color: white;
   padding: 10px;
   box-sizing: border-box;
+  border: none;
+  cursor: pointer;
 }
 
-.download-all-btn-link:hover {
+.download-all-btn:hover, .download-all-btn-link:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }

@@ -15,48 +15,48 @@
 ```mermaid
 graph TD
     %% 外部使用者
-    subgraph 用戶端
-        A[學生 (Web / Mobile) ] 
-        B[家長/教師管理介面]
+    subgraph Client["用戶端"]
+        A["學生 (Web / Mobile)"] 
+        B["家長/教師管理介面"]
     end
 
     %% 前端
-    subgraph 前端 (React + TypeScript)
-        C[SPA 主程式] --> D[單詞卡片 UI]
-        C --> E[配對遊戲 (PixiJS/Canvas)]
-        C --> F[積分 & 小物 UI]
-        C --> G[學習儀表板 (圖表)]
-        C --> H[登入/註冊頁面]
+    subgraph Frontend["前端 (React + TypeScript)"]
+        C["SPA 主程式"] --> D["單詞卡片 UI"]
+        C --> E["配對遊戲 (PixiJS/Canvas)"]
+        C --> F["積分 & 小物 UI"]
+        C --> G["學習儀表板 (圖表)"]
+        C --> H["登入/註冊頁面"]
     end
 
     %% API Gateway（本地負載平衡）    
-    subgraph API 層 (Node.js/Express + TypeScript)
-        I[RESTful API Gateway] --> J[認證服務 (JWT + 本地 OAuth2)]
-        I --> K[單詞服務]
-        I --> L[遊戲結果服務]
-        I --> M[進度/積分服務]
-        I --> N[後台管理服務]
+    subgraph APILayer["API 層 (Node.js/Express + TypeScript)"]
+        I["RESTful API Gateway"] --> J["認證服務 (JWT + 本地 OAuth2)"]
+        I --> K["單詞服務"]
+        I --> L["遊戲結果服務"]
+        I --> M["進度/積分服務"]
+        I --> N["後台管理服務"]
     end
 
     %% 資料層
-    subgraph 資料層
-        O[PostgreSQL (本地) ] 
-        P[Redis (Session / Cache)] 
-        Q[檔案儲存 (NAS / 本地 Object Store)] 
+    subgraph DataLayer["資料層"]
+        O["PostgreSQL (本地)"] 
+        P["Redis (Session / Cache)"] 
+        Q["檔案儲存 (NAS / 本地 Object Store)"] 
     end
 
     %% 管理介面
-    subgraph 後台 (React Admin)
-        R[單詞/關卡 CRUD] 
-        S[規則設定 (積分/小物)] 
-        T[使用者與權限管理] 
+    subgraph AdminBack["後台 (React Admin)"]
+        R["單詞/關卡 CRUD"] 
+        S["規則設定 (積分/小物)"] 
+        T["使用者與權限管理"] 
     end
 
     %% 監控 & 分析
-    subgraph 監控/分析
-        U[Prometheus + Grafana] 
-        V[Logstash + Kibana] 
-        W[自建 KPI Dashboard] 
+    subgraph Monitor["監控/分析"]
+        U["Prometheus + Grafana"] 
+        V["Logstash + Kibana"] 
+        W["自建 KPI Dashboard"] 
     end
 
     %% 流程

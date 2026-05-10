@@ -1,5 +1,6 @@
 import React from 'react';
 import useChatStore from '../../stores/chatStore';
+import { useApi } from '../../hooks/useApi';
 import { X, FileText, Download, Box } from 'lucide-react';
 import './Files.css';
 
@@ -8,14 +9,56 @@ import './Files.css';
  */
 const FilePanel = ({ projectId, isOpen, onClose }) => {
   const files = useChatStore((s) => s.files);
-  const token = localStorage.getItem('token') || '';
-  const encodedToken = encodeURIComponent(token);
+  const api = useApi();
 
   if (!isOpen) return null;
 
-  // 輔助函式：產生帶有 Token 的下載 URL
-  const getDownloadUrl = (endpoint) => {
-    return `${endpoint}?token=${encodedToken}`;
+  // 處理單一檔案下載
+  const handleDownload = async (file) => {
+    try {
+      console.log(`[FilePanel] 開始下載: ${file.filename}`);
+      const blob = await api.get(`/api/projects/${projectId}/files/${file.filename}`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', file.filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('下載失敗:', err);
+      alert('檔案下載失敗，請稍後再試');
+    }
+  };
+
+  // 處理全部打包下載
+  const handleDownloadAll = async () => {
+    try {
+      console.log(`[FilePanel] 開始打包下載全部檔案`);
+      const blob = await api.get(`/api/projects/${projectId}/download-all`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `SpecForge_Project_${projectId}_All_Files.zip`);
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('打包下載失敗:', err);
+      alert('打包下載失敗，請稍後再試');
+    }
   };
 
   const formatSize = (bytes) => {
@@ -58,15 +101,13 @@ const FilePanel = ({ projectId, isOpen, onClose }) => {
                 </div>
               </div>
               <div className="file-actions">
-                {/* 使用真正的 <a> 標籤，這是最穩定的下載方式 */}
-                <a 
-                  href={getDownloadUrl(`/api/projects/${projectId}/files/${file.filename}`)}
-                  download={file.filename}
-                  className="file-btn-link"
-                  onClick={(e) => console.log(`[FilePanel] 觸發原生下載: ${file.filename}`)}
+                <button 
+                  className="file-btn"
+                  onClick={() => handleDownload(file)}
+                  title="下載此檔案"
                 >
                   <Download size={14} /> 下載
-                </a>
+                </button>
               </div>
             </div>
           ))
@@ -75,13 +116,12 @@ const FilePanel = ({ projectId, isOpen, onClose }) => {
 
       <div className="file-panel-footer">
         {files.length > 0 && (
-          <a 
-            href={getDownloadUrl(`/api/projects/${projectId}/download-all`)}
-            download={`SpecForge_Project_${projectId}_All_Files.zip`}
-            className="download-all-btn-link"
+          <button 
+            className="download-all-btn"
+            onClick={handleDownloadAll}
           >
             <Box size={18} /> 打包下載全部 (ZIP)
-          </a>
+          </button>
         )}
       </div>
     </div>

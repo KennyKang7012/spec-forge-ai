@@ -5,45 +5,45 @@
 flowchart LR
     %% 用戶端
     subgraph Client["前端 (Web / Mobile)"]
-        UI[React + TypeScript<br/>Responsive UI<br/>PWA 支援]
-        Auth[JWT 身份驗證<br/>Local OAuth2 Server]
-        Notify[WebSocket / Server‑Sent Events<br/>即時通知]
+        UI["React + TypeScript<br/>Responsive UI<br/>PWA 支援"]
+        Auth["JWT 身份驗證<br/>Local OAuth2 Server"]
+        Notify["WebSocket / Server‑Sent Events<br/>即時通知"]
     end
 
     %% API Gateway
-    subgraph Gateway["API Gateway\n(Nginx + Node/Express)"]
-        GW[路由、速率限制、TLS termination]
+    subgraph Gateway["API Gateway<br/>(Nginx + Node/Express)"]
+        GW["路由、速率限制、TLS termination"]
     end
 
     %% 微服務
     subgraph Services["後端微服務 (Docker/K8s)"]
-        LogService[工作日誌服務<br/>CRUD、附件上傳<br/>MongoDB]
-        SummaryService[週匯總服務<br/>聚合、PDF/Excel 產出]
-        TagService[標籤 & 分類服務<br/>Tag/Category DB (Mongo)]
-        NotifyService[通知服務<br/>Redis Pub/Sub + WS 推送]
-        SearchService[全文搜尋服務<br/>ElasticSearch + Sync Worker]
-        KBService[知識庫匯入服務<br/>自動抽取標記資訊<br/>ElasticSearch Index]
-        AuthService[本地 OAuth2 / JWT Issuer<br/>使用者/角色管理<br/>MongoDB]
-        AuditService[審計日誌服務<br/>寫入 PostgreSQL (append‑only) ]
+        LogService["工作日誌服務<br/>CRUD、附件上傳<br/>MongoDB"]
+        SummaryService["週匯總服務<br/>聚合、PDF/Excel 產出"]
+        TagService["標籤 & 分類服務<br/>Tag/Category DB (Mongo)"]
+        NotifyService["通知服務<br/>Redis Pub/Sub + WS 推送"]
+        SearchService["全文搜尋服務<br/>ElasticSearch + Sync Worker"]
+        KBService["知識庫匯入服務<br/>自動抽取標記資訊<br/>ElasticSearch Index"]
+        AuthService["本地 OAuth2 / JWT Issuer<br/>使用者/角色管理<br/>MongoDB"]
+        AuditService["審計日誌服務<br/>寫入 PostgreSQL (append‑only)"]
     end
 
     %% 資料儲存
     subgraph Storage["持久化層"]
-        MongoDB[(MongoDB Cluster<br/>工作日誌、使用者、設定)]
-        ES[(ElasticSearch Cluster<br/>全文索引、知識庫)]
-        Redis[(Redis Cache<br/>Session、通知佇列)]
-        PG[(PostgreSQL<br/>審計日誌)]
-        Files[(檔案儲存 (NAS / GlusterFS)<br/>5 TB 永久保留<br/>支援分層快取)]
+        MongoDB["(MongoDB Cluster<br/>工作日誌、使用者、設定)"]
+        ES["(ElasticSearch Cluster<br/>全文索引、知識庫)"]
+        Redis["(Redis Cache<br/>Session、通知佇列)"]
+        PG["(PostgreSQL<br/>審計日誌)"]
+        Files["(檔案儲存 (NAS / GlusterFS)<br/>5 TB 永久保留<br/>支援分層快取)"]
     end
 
     %% 系統管理與 CI/CD
     subgraph Ops["運維 / CI‑CD"]
-        GitHub[GitHub Repository]
-        GHActions[GitHub Actions<br/>單元/整合測試 → Docker Image]
-        Registry[私有 Docker Registry]
-        K8s[Kubernetes (on‑prem)<br/>Blue/Green Deploy, HPA]
-        Monitoring[Prometheus + Grafana<br/>Health‑Check、SLO]
-        Logging[EFK Stack (Elasticsearch‑Fluentd‑Kibana)<br/>系統日誌]
+        GitHub["GitHub Repository"]
+        GHActions["GitHub Actions<br/>單元/整合測試 → Docker Image"]
+        Registry["私有 Docker Registry"]
+        K8s["Kubernetes (on‑prem)<br/>Blue/Green Deploy, HPA"]
+        Monitoring["Prometheus + Grafana<br/>Health‑Check、SLO"]
+        Logging["EFK Stack (Elasticsearch‑Fluentd‑Kibana)<br/>系統日誌"]
     end
 
     %% 連線
@@ -70,7 +70,7 @@ flowchart LR
     SummaryService --> Files
 
     SearchService --> ES
-    Monitor[Prometheus] --> K8s
+    Monitor["Prometheus"] --> K8s
     Logging --> ES
 
     GHActions --> Registry
