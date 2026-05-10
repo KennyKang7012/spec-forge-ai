@@ -21,6 +21,7 @@ export const useApi = () => {
 
     try {
       // 由於 Vite 設定了 proxy，這裡直接打 /api 開頭的路徑即可
+      console.log(`[useApi] Fetching: ${config.method} ${endpoint}`);
       const response = await fetch(endpoint, config);
       
       // 檢查是否為 401 (未授權/Token 過期)
@@ -29,26 +30,34 @@ export const useApi = () => {
         throw new Error('Session expired or unauthorized. Please log in again.');
       }
 
-      // Check if response has content before parsing JSON
-      const text = await response.text();
-      let data = {};
-      try {
-        if (text) {
-          data = JSON.parse(text);
-        }
-      } catch (e) {
-        // Not a JSON response (e.g. backend down, Vite proxy error HTML)
-        console.warn('Response is not valid JSON:', text.substring(0, 100));
-        if (!response.ok) {
-           throw new Error(`API request failed with status ${response.status}`);
-        }
-      }
-
       if (!response.ok) {
-        throw new Error(data.detail || data.message || `API request failed: ${response.status}`);
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {}
+        throw new Error(errorData.detail || errorData.message || `API request failed: ${response.status}`);
       }
 
-      return data;
+      // 如果請求的是 blob (例如下載檔案)
+      if (options.responseType === 'blob') {
+        return await response.blob();
+      }
+
+      // 如果請求的是 arraybuffer
+      if (options.responseType === 'arraybuffer') {
+        return await response.arrayBuffer();
+      }
+
+      // 預設處理為 JSON
+      const text = await response.text();
+      if (!text) return {};
+      
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.warn('Response is not valid JSON:', text.substring(0, 100));
+        return text;
+      }
     } catch (error) {
       console.error('API Error:', error);
       throw error;

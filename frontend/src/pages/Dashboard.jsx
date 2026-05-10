@@ -12,14 +12,16 @@ const Dashboard = () => {
   const [showFiles, setShowFiles] = useState(false);
 
   return (
-    <>
-      <ChatArea onToggleFiles={() => setShowFiles(true)} />
+    <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <ChatArea onToggleFiles={() => setShowFiles(!showFiles)} />
+      </div>
       <FilePanel
         projectId={currentProject?.id}
         isOpen={showFiles}
         onClose={() => setShowFiles(false)}
       />
-    </>
+    </div>
   );
 };
 

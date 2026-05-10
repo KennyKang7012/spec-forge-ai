@@ -11,10 +11,13 @@ const useChatStore = create((set, get) => ({
   currentAgent: null, // 'BA' | 'PM' | 'Architect' | 'Writer'
   currentPhase: 1, // 1-5
   isWorkflowStarted: false,
-  connectionStatus: 'disconnected', // connected | disconnected | connecting | error
+  connectionStatus: 'disconnected',
+  files: [],
   error: null,
 
   // ── Actions ────────────────────────────────────────────────────
+
+  setFiles: (files) => set({ files }),
 
   addMessage: (message) =>
     set((state) => ({

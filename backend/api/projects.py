@@ -8,11 +8,16 @@ import json
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
+import os
+import zipfile
+import io
+import urllib.parse
 
 from backend.core.database import ChatMessage, Project, ProjectVersion, User, get_db
 from backend.core.security import get_current_user, verify_token
@@ -334,3 +339,123 @@ async def project_stream(
             pass
 
     return EventSourceResponse(event_generator())
+
+
+@router.get(
+    "/{project_id}/files",
+    summary="取得專案產出的檔案清單",
+)
+async def list_project_files(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """列出 backend/docs/ 下所有屬於該專案的 .md 檔案"""
+    await _get_user_project(project_id, current_user.id, db)
+    
+    docs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")
+    if not os.path.exists(docs_dir):
+        return []
+
+    files = []
+    suffix = f"_{project_id}.md"
+    
+    for filename in os.listdir(docs_dir):
+        if filename.endswith(suffix):
+            # 建立友善的顯示名稱
+            display_name = filename.replace(suffix, "").replace("_", " ").title()
+            files.append({
+                "filename": filename,
+                "display_name": display_name,
+                "size": os.path.getsize(os.path.join(docs_dir, filename)),
+                "updated_at": datetime.fromtimestamp(os.path.getmtime(os.path.join(docs_dir, filename))).isoformat()
+            })
+    
+    # 依照修改時間排序
+    files.sort(key=lambda x: x["updated_at"])
+    return files
+
+
+@router.get(
+    "/{project_id}/files/{filename}",
+    summary="讀取或下載特定檔案",
+)
+async def get_project_file(
+    project_id: int,
+    filename: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """讀取或下載特定檔案，支援 Authorization Header 或 Query Token"""
+    # 如果 current_user 是由 Depends(get_current_user) 取得，代表 Header 驗證已過
+    # 如果沒過，Depends(get_current_user) 會噴 401，我們需要在這裡處理 Query Token 的情況
+    # 但為了簡化，我們可以直接在 get_current_user 裡實作 Query Token 支援
+    """取得特定檔案內容"""
+    await _get_user_project(project_id, current_user.id, db)
+    
+    # 安全檢查：確保檔案名稱符合預期格式，防止路徑穿越攻擊
+    if not filename.endswith(f"_{project_id}.md") or ".." in filename:
+        raise HTTPException(status_code=403, detail="無權存取此檔案")
+
+    docs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")
+    file_path = os.path.join(docs_dir, filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="檔案不存在")
+
+    safe_filename = urllib.parse.quote(filename)
+    
+    with open(file_path, "rb") as f:
+        content = f.read()
+
+    # 使用 FastAPI 最標準的 FileResponse，讓框架處理所有標頭
+    return FileResponse(
+        file_path,
+        filename=filename,
+        media_type="application/octet-stream"
+    )
+
+
+@router.get(
+    "/{project_id}/download-all",
+    summary="打包下載所有產出物 (ZIP)",
+)
+async def download_project_zip(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """將專案的所有 .md 產出物打包成 ZIP 下載"""
+    project = await _get_user_project(project_id, current_user.id, db)
+    
+    docs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")
+    suffix = f"_{project_id}.md"
+    
+    # 收集檔案
+    project_files = [f for f in os.listdir(docs_dir) if f.endswith(suffix)] if os.path.exists(docs_dir) else []
+    
+    if not project_files:
+        raise HTTPException(status_code=404, detail="目前尚無產出檔案可供下載")
+
+    # 建立記憶體中的 ZIP 檔案
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        for filename in project_files:
+            file_path = os.path.join(docs_dir, filename)
+            zip_file.write(file_path, arcname=filename)
+    
+    zip_buffer.seek(0)
+    zip_data = zip_buffer.getvalue()
+    zip_buffer.close()
+    
+    # 處理中文檔名編碼
+    safe_name = urllib.parse.quote(project.name.replace(' ', '_'))
+    zip_filename = f"SpecForge_Project_{project_id}_{safe_name}.zip"
+    
+    return Response(
+        content=zip_data,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_filename}"'
+        }
+    )

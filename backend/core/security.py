@@ -6,7 +6,8 @@ SpecForge AI — JWT 認證與密碼安全模組
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy import select
@@ -84,22 +85,29 @@ def verify_token(token: str) -> dict:
 
 # ── FastAPI 依賴注入 ────────────────────────────────────────────────
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# auto_error=False 讓我們能手動處理 Query Token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    token: str | None = Depends(oauth2_scheme),
+    token_query: str | None = Query(None, alias="token"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
     FastAPI 依賴注入 — 從 JWT token 取得當前登入用戶
-
-    用法：
-        @router.get("/protected")
-        async def protected_route(user: User = Depends(get_current_user)):
-            ...
+    支援 Authorization Header 或 Query String (?token=...)
     """
-    payload = verify_token(token)
+    final_token = token or token_query
+    
+    if not final_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="請先登入以取得認證憑證",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    payload = verify_token(final_token)
     username: str | None = payload.get("sub")
 
     if username is None:

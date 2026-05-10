@@ -28,9 +28,31 @@ const ChatArea = ({ onToggleFiles }) => {
   const setCurrentAgent = useChatStore((s) => s.setCurrentAgent);
   const setCurrentPhase = useChatStore((s) => s.setCurrentPhase);
   const clearMessages = useChatStore((s) => s.clearMessages);
+  const setFiles = useChatStore((s) => s.setFiles);
+
+  // ── 抓取專案檔案清單 ────────────────────────────────────────────
+  const fetchFiles = useCallback(async () => {
+    const projectId = currentProject?.id;
+    if (!projectId) return;
+
+    try {
+      const files = await api.get(`/api/projects/${projectId}/files`);
+      setFiles(files);
+    } catch (err) {
+      console.error('[ChatArea] 無法抓取檔案清單:', err);
+    }
+  }, [currentProject?.id, api, setFiles]);
+
+  // SSE 事件回調
+  const handleSSEEvent = useCallback((msg) => {
+    // 當階段完成時，自動刷新檔案清單
+    if (msg.type === 'phase_complete' || msg.type === 'connected') {
+      fetchFiles();
+    }
+  }, [fetchFiles]);
 
   // SSE 連線
-  const { connectionStatus, reconnect } = useSSE(currentProject?.id || null);
+  const { connectionStatus, reconnect } = useSSE(currentProject?.id || null, handleSSEEvent);
 
   // 當切換專案時，載入歷史訊息
   useEffect(() => {
@@ -65,6 +87,7 @@ const ChatArea = ({ onToggleFiles }) => {
     };
 
     loadHistory();
+    fetchFiles(); // 同時載入現有檔案
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentProject?.id]); // 只在專案 ID 改變時執行一次
 

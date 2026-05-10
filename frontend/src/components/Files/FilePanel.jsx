@@ -1,91 +1,90 @@
-import { useState } from 'react';
-import { X, FileText, Download, Eye } from 'lucide-react';
-import FilePreview from './FilePreview';
+import React from 'react';
+import useChatStore from '../../stores/chatStore';
+import { X, FileText, Download, Box } from 'lucide-react';
 import './Files.css';
 
 /**
- * 模擬的檔案列表（後端 /files API 尚未實作）
- * Phase 5 再接上真實 API
- */
-const MOCK_FILES = [
-  { name: 'intent_report.md', label: '意圖分析報告', agent: 'BA', size: '—' },
-  { name: 'proposal.md', label: '需求提案', agent: 'PM', size: '—' },
-  { name: 'design_and_tasks.md', label: '技術架構 & 任務清單', agent: 'Architect', size: '—' },
-  { name: 'final_specs.md', label: '最終規格文件', agent: 'Writer', size: '—' },
-];
-
-/**
- * FilePanel — 檔案面板（右側滑出抽屜）
- * @param {{ projectId: number, isOpen: boolean, onClose: () => void }} props
+ * SpecForge AI — 檔案產出面板
  */
 const FilePanel = ({ projectId, isOpen, onClose }) => {
-  const [previewFile, setPreviewFile] = useState(null);
+  const files = useChatStore((s) => s.files);
+  const token = localStorage.getItem('token') || '';
+  const encodedToken = encodeURIComponent(token);
 
   if (!isOpen) return null;
 
+  // 輔助函式：產生帶有 Token 的下載 URL
+  const getDownloadUrl = (endpoint) => {
+    return `${endpoint}?token=${encodedToken}`;
+  };
+
+  const formatSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   return (
-    <>
-      {/* Backdrop */}
-      <div className="file-panel-overlay" onClick={onClose} />
-
-      {/* Panel */}
-      <div className="file-panel">
-        <div className="file-panel-header">
-          <h3>
-            <FileText size={18} />
-            產出檔案
-          </h3>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="file-panel-body">
-          {MOCK_FILES.map((file) => (
-            <div
-              key={file.name}
-              className="file-item"
-              onClick={() => setPreviewFile(file)}
-            >
-              <div className="file-item-icon">
-                <FileText size={18} />
-              </div>
-              <div className="file-item-info">
-                <div className="file-item-name">{file.label}</div>
-                <div className="file-item-meta">
-                  {file.name} · {file.agent} Agent
-                </div>
-              </div>
-              <div className="file-item-action">
-                <Eye size={14} />
-              </div>
-            </div>
-          ))}
-
-          <div className="file-empty" style={{ marginTop: 'var(--space-lg)' }}>
-            <p style={{ fontSize: '0.8rem' }}>
-              💡 檔案將在 Agent 工作流程完成後產生
-            </p>
-          </div>
-        </div>
-
-        <div className="file-panel-footer">
-          <button className="primary-btn" disabled>
-            <Download size={14} style={{ marginRight: 6 }} />
-            下載全部（即將推出）
-          </button>
-        </div>
+    <div className="file-panel">
+      <div className="file-panel-header">
+        <h3>
+          <FileText size={20} className="header-icon" />
+          產出物清單
+          {files.length > 0 && <span className="file-count">{files.length}</span>}
+        </h3>
+        <button className="icon-btn close-btn" onClick={onClose} title="關閉面板">
+          <X size={20} />
+        </button>
       </div>
 
-      {/* Preview Modal */}
-      {previewFile && (
-        <FilePreview
-          file={previewFile}
-          projectId={projectId}
-          onClose={() => setPreviewFile(null)}
-        />
-      )}
-    </>
+      <div className="file-list">
+        {files.length === 0 ? (
+          <div className="empty-files">
+            <div className="empty-icon">📄</div>
+            <p>目前尚無產出文件<br /><small>Agent 執行完畢後將自動顯示</small></p>
+          </div>
+        ) : (
+          files.map((file) => (
+            <div key={file.filename} className="file-item">
+              <div className="file-item-info">
+                <FileText size={24} className="file-icon-item" />
+                <div className="file-details">
+                  <span className="file-name">{file.display_name}</span>
+                  <span className="file-meta">
+                    {formatSize(file.size)} • {new Date(file.updated_at).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+              <div className="file-actions">
+                {/* 使用真正的 <a> 標籤，這是最穩定的下載方式 */}
+                <a 
+                  href={getDownloadUrl(`/api/projects/${projectId}/files/${file.filename}`)}
+                  download={file.filename}
+                  className="file-btn-link"
+                  onClick={(e) => console.log(`[FilePanel] 觸發原生下載: ${file.filename}`)}
+                >
+                  <Download size={14} /> 下載
+                </a>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="file-panel-footer">
+        {files.length > 0 && (
+          <a 
+            href={getDownloadUrl(`/api/projects/${projectId}/download-all`)}
+            download={`SpecForge_Project_${projectId}_All_Files.zip`}
+            className="download-all-btn-link"
+          >
+            <Box size={18} /> 打包下載全部 (ZIP)
+          </a>
+        )}
+      </div>
+    </div>
   );
 };
 

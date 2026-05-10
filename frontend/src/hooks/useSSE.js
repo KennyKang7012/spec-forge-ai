@@ -6,9 +6,10 @@ import useAuthStore from '../stores/authStore';
 /**
  * useSSE — 管理 SSE 連線生命週期並分派事件到 chatStore
  * @param {number|null} projectId
+ * @param {Function} onEvent - 事件發生時的回調函式
  * @returns {{ connectionStatus: string, reconnect: () => void }}
  */
-const useSSE = (projectId) => {
+const useSSE = (projectId, onEvent) => {
   const { token } = useAuthStore();
   const {
     addAgentMessage,
@@ -71,8 +72,13 @@ const useSSE = (projectId) => {
         default:
           console.warn('[SSE] 未知事件類型:', type, data);
       }
+
+      if (onEvent) {
+        onEvent(msg);
+      }
     },
     [
+      onEvent,
       addAgentMessage,
       addSystemMessage,
       setUIState,
